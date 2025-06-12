@@ -53,6 +53,8 @@ func (u *UI) Scan() (string, bool) {
 		return "", false
 	}
 	fmt.Print(message)
+	u.Query = ""
+	u.FullResponse = ""
 	fmt.Scanf("%s", u.Query)
 	if u.Query == "exit" {
 		return "", false

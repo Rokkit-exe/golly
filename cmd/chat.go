@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Rokkit-exe/golly/config"
 	"github.com/Rokkit-exe/golly/models"
 	"github.com/Rokkit-exe/golly/ollama"
 	"github.com/Rokkit-exe/golly/ui"
@@ -62,10 +61,12 @@ You can specify the model, host, and port to connect to your Ollama instance.
 		}
 		ollamaClient := ollama.NewOllama(host, port)
 		for quit := false; !quit; {
+			ui.Clear()
 			streamCh, errCh := ollamaClient.StreamChat(model, []models.ChatMessage{
 				{Role: "user", Content: query},
 			})
 			ui.PrintAI(streamCh, errCh)
+			ui.PrintEndOfMessage()
 			query, ok := ui.Scan()
 			if !ok {
 				quit = true
@@ -77,14 +78,10 @@ You can specify the model, host, and port to connect to your Ollama instance.
 }
 
 func init() {
-	config, err := config.LoadConfig(".env")
-	if err != nil {
-		fmt.Println("Error loading config:", err)
-		return
-	}
+	config := models.LoadConfig("config.yml")
 	rootCmd.AddCommand(chatCmd)
 	chatCmd.Flags().StringVar(&query, "query", "Hello!", "Query to send to the chat model")
-	chatCmd.Flags().StringP("model", "m", config.DefaultModel, "Model to use for the chat")
+	chatCmd.Flags().StringP("model", "m", config.Model, "Model to use for the chat")
 	chatCmd.Flags().StringP("host", "H", config.Host, "Host of the Ollama instance")
 	chatCmd.Flags().StringP("port", "p", config.Port, "Port of the Ollama instance")
 }

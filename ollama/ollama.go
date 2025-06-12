@@ -17,7 +17,7 @@ type Ollama struct {
 
 func NewOllama(host string, port string) *Ollama {
 	return &Ollama{
-		URL:        fmt.Sprintf("http://%s:%s/api/chat", host, port),
+		URL:        fmt.Sprintf("http://%s:%s", host, port),
 		HTTPClient: &http.Client{},
 	}
 }
@@ -42,7 +42,7 @@ func (o *Ollama) StreamChat(model string, messages []models.ChatMessage) (<-chan
 			return
 		}
 
-		req, err := http.NewRequest("POST", o.URL, bytes.NewBuffer(jsonData))
+		req, err := http.NewRequest("POST", o.URL+"/api/chat/", bytes.NewBuffer(jsonData))
 		if err != nil {
 			errCh <- err
 			return
@@ -84,4 +84,93 @@ func (o *Ollama) StreamChat(model string, messages []models.ChatMessage) (<-chan
 	}()
 
 	return out, errCh
+}
+
+func (o *Ollama) Create(name string, from string, system string) (models.CreateResponse, error) {
+	reqBody := models.CreateRequest{
+		Name:   name,
+		From:   from,
+		System: system,
+	}
+
+	jsonData, err := json.Marshal(reqBody)
+	if err != nil {
+		return models.CreateResponse{}, fmt.Errorf("failed to marshal request body: %w", err)
+	}
+
+	req, err := http.NewRequest("POST", o.URL+"/api/create", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return models.CreateResponse{}, fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := o.HTTPClient.Do(req)
+	if err != nil {
+		return models.CreateResponse{}, fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return models.CreateResponse{}, fmt.Errorf("failed to create model, status code: %d", resp.StatusCode)
+	}
+
+	var response models.CreateResponse
+
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return models.CreateResponse{}, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	fmt.Printf("Model created successfully: %s\n", response.Status)
+
+	return models.CreateResponse{}, nil
+}
+
+func (o *Ollama) List() (models.ListResponse, error) {
+	req, err := http.NewRequest("GET", o.URL+"/api/tags", nil)
+	if err != nil {
+		return models.ListResponse{}, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := o.HTTPClient.Do(req)
+	if err != nil {
+		return models.ListResponse{}, fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return models.ListResponse{}, fmt.Errorf("failed to list models, status code: %d", resp.StatusCode)
+	}
+
+	var models models.ListResponse
+	if err := json.NewDecoder(resp.Body).Decode(&models); err != nil {
+		return models, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return models, nil
+}
+
+func (o *Ollama) Delete(model string) error {
+	reqBody := models.DeleteRequest{
+		Model: model,
+	}
+	jsonData, err := json.Marshal(reqBody)
+	if err != nil {
+		return fmt.Errorf("failed to marshal request body: %w", err)
+	}
+	req, err := http.NewRequest("DELETE", o.URL+"/api/delete", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := o.HTTPClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to delete model, status code: %d", resp.StatusCode)
+	}
+
+	return nil
 }
