@@ -8,14 +8,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Rokkit-exe/golly/client"
 	"github.com/Rokkit-exe/golly/models"
-	"github.com/Rokkit-exe/golly/ollama"
 	"github.com/Rokkit-exe/golly/ui"
 	"github.com/charmbracelet/glamour"
 	"github.com/spf13/cobra"
 )
 
-var query string
+var (
+	query  string
+	search bool
+)
 
 // chatCmd represents the chat command
 var chatCmd = &cobra.Command{
@@ -39,6 +42,11 @@ You can specify the model, host, and port to connect to your Ollama instance.
 		if err != nil {
 			fmt.Println("Error getting port flag:", err)
 		}
+
+		//search, err := cmd.Flags().GetBool("search")
+		//if err != nil {
+		//	fmt.Println("Error getting search flag: ", err)
+		//}
 		query := strings.Join(args, " ")
 		fmt.Println("model: " + model)
 		fmt.Println("host: " + host)
@@ -59,7 +67,7 @@ You can specify the model, host, and port to connect to your Ollama instance.
 			Query:        "",
 			FullResponse: "",
 		}
-		ollamaClient := ollama.NewOllama(host, port)
+		ollamaClient := client.NewOllama(host, port)
 		for quit := false; !quit; {
 			ui.Clear()
 			streamCh, errCh := ollamaClient.StreamChat(model, []models.ChatMessage{
@@ -81,6 +89,7 @@ func init() {
 	config := models.LoadConfig("config.yml")
 	rootCmd.AddCommand(chatCmd)
 	chatCmd.Flags().StringVar(&query, "query", "Hello!", "Query to send to the chat model")
+	chatCmd.Flags().BoolP("search", "s", true, "search using SearXNG")
 	chatCmd.Flags().StringP("model", "m", config.Model, "Model to use for the chat")
 	chatCmd.Flags().StringP("host", "H", config.Host, "Host of the Ollama instance")
 	chatCmd.Flags().StringP("port", "p", config.Port, "Port of the Ollama instance")

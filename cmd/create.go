@@ -6,8 +6,8 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/Rokkit-exe/golly/client"
 	"github.com/Rokkit-exe/golly/models"
-	"github.com/Rokkit-exe/golly/ollama"
 	"github.com/spf13/cobra"
 )
 
@@ -36,7 +36,7 @@ var createCmd = &cobra.Command{
 			return
 		}
 
-		client := ollama.NewOllama(config.Host, config.Port)
+		client := client.NewOllama(config.Host, config.Port)
 
 		response, err := client.Create(name, from, system)
 		if err != nil {

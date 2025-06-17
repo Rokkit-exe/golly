@@ -8,9 +8,16 @@ import (
 )
 
 type Config struct {
-	Host  string `yaml:"host"`
-	Port  string `yaml:"port"`
-	Model string `yaml:"model"`
+	Host          string   `yaml:"host"`
+	Port          string   `yaml:"port"`
+	Model         string   `yaml:"model"`
+	SystemPrompts []string `yaml:"system_prompts"`
+}
+
+type SystemPrompts struct {
+	RefactorQuery string `yaml:"refactor_query"`
+	ResultPicker  string `yaml:"result_picker"`
+	AnswerBuilder string `yaml:"answer_builder"`
 }
 
 var (

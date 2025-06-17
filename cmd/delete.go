@@ -6,7 +6,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/Rokkit-exe/golly/ollama"
+	"github.com/Rokkit-exe/golly/client"
 	"github.com/spf13/cobra"
 )
 
@@ -30,7 +30,7 @@ golly delete --model llama3.2`,
 			return
 		}
 
-		client := ollama.NewOllama(config.Host, config.Port)
+		client := client.NewOllama(config.Host, config.Port)
 
 		err = client.Delete(model)
 		if err != nil {

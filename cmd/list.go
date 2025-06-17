@@ -6,7 +6,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/Rokkit-exe/golly/ollama"
+	"github.com/Rokkit-exe/golly/client"
 	"github.com/Rokkit-exe/golly/utils"
 	"github.com/spf13/cobra"
 )
@@ -18,7 +18,7 @@ var listCmd = &cobra.Command{
 	Long: `List all available models from the Ollama server.
 Custom and default models will be displayed.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		client := ollama.NewOllama(config.Host, config.Port)
+		client := client.NewOllama(config.Host, config.Port)
 
 		resp, err := client.List()
 		if err != nil {
