@@ -18,7 +18,7 @@ var listCmd = &cobra.Command{
 	Long: `List all available models from the Ollama server.
 Custom and default models will be displayed.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		client := client.NewOllama(config.Host, config.Port)
+		client := client.NewOllama(config.OllamaHost, config.OllamaPort)
 
 		resp, err := client.List()
 		if err != nil {

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Rokkit-exe/golly/agent"
 	"github.com/Rokkit-exe/golly/client"
 	"github.com/Rokkit-exe/golly/models"
 	"github.com/Rokkit-exe/golly/ui"
@@ -62,25 +63,28 @@ You can specify the model, host, and port to connect to your Ollama instance.
 			fmt.Println("Error creating renderer:", err)
 			return
 		}
-		ui := ui.UI{
-			Renderer:     renderer,
-			Query:        "",
-			FullResponse: "",
+		agent := agent.Agent{
+			Ollama:   *client.NewOllama(host, port),
+			Searcher: *client.NewSearcher("http://" + config.SearxngHost + ":" + config.SearxngPort + "/"),
+			Config:   *models.LoadConfig("config.yml"),
+			UI: ui.UI{
+				Renderer:     renderer,
+				Query:        "",
+				FullResponse: "",
+			},
 		}
-		ollamaClient := client.NewOllama(host, port)
+
 		for quit := false; !quit; {
-			ui.Clear()
-			streamCh, errCh := ollamaClient.StreamChat(model, []models.ChatMessage{
-				{Role: "user", Content: query},
-			})
-			ui.PrintAI(streamCh, errCh)
-			ui.PrintEndOfMessage()
-			query, ok := ui.Scan()
+			agent.UI.PrintStatus("Chatting with " + model + " at " + host + ":" + port)
+			streamCh, errCh := agent.Search(query)
+			agent.UI.PrintAI(streamCh, errCh)
+			agent.UI.PrintEndOfMessage()
+			query, ok := agent.UI.Scan()
 			if !ok {
 				quit = true
 				continue
 			}
-			ui.PrintUser(query)
+			agent.UI.PrintUser(query)
 		}
 	},
 }
@@ -91,6 +95,6 @@ func init() {
 	chatCmd.Flags().StringVar(&query, "query", "Hello!", "Query to send to the chat model")
 	chatCmd.Flags().BoolP("search", "s", true, "search using SearXNG")
 	chatCmd.Flags().StringP("model", "m", config.Model, "Model to use for the chat")
-	chatCmd.Flags().StringP("host", "H", config.Host, "Host of the Ollama instance")
-	chatCmd.Flags().StringP("port", "p", config.Port, "Port of the Ollama instance")
+	chatCmd.Flags().StringP("host", "H", config.OllamaHost, "Host of the Ollama instance")
+	chatCmd.Flags().StringP("port", "p", config.OllamaPort, "Port of the Ollama instance")
 }

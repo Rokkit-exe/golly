@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
+	"net/url"
+	"strings"
 
+	"github.com/PuerkitoBio/goquery"
 	"github.com/Rokkit-exe/golly/models"
 )
 
@@ -24,17 +26,11 @@ func NewSearcher(url string) *Searcher {
 }
 
 func (s *Searcher) Search(query string) (models.SearchResponse, error) {
-	reqBody := models.SearchRequest{
-		Q: query,
-	}
-
-	jsonData, err := json.Marshal(reqBody)
-	if err != nil {
-		log.Fatal("Error parsing reqBody")
-		return models.SearchResponse{}, err
-	}
-
-	req, err := http.NewRequest("POST", s.URL+"/api/chat/", bytes.NewBuffer(jsonData))
+	params := url.Values{}
+	params.Add("q", query)
+	params.Add("format", "json")
+	fullURL := fmt.Sprintf("%s/search?%s", s.URL, params.Encode())
+	req, err := http.NewRequest("POST", fullURL, bytes.NewBuffer(nil))
 	if err != nil {
 		return models.SearchResponse{}, err
 	}
@@ -61,20 +57,27 @@ func (s *Searcher) GetWebResults(urls []string) ([]models.WebResult, error) {
 	for _, u := range urls {
 		resp, err := http.Get(u)
 		if err != nil {
-			fmt.Println("Request error:", err)
-			return []models.WebResult{}, err
+			log.Fatalf("Request failed: %v", err)
 		}
 		defer resp.Body.Close()
 
-		// Read response body
-		body, err := io.ReadAll(resp.Body)
+		// Load the HTML document
+		doc, err := goquery.NewDocumentFromReader(resp.Body)
 		if err != nil {
-			fmt.Println("Read error:", err)
-			return []models.WebResult{}, nil
+			log.Fatalf("Failed to parse HTML: %v", err)
 		}
+
+		// Extract all visible text
+		var sb strings.Builder
+		doc.Find("body").Each(func(i int, s *goquery.Selection) {
+			text := strings.TrimSpace(s.Text())
+			if text != "" {
+				sb.WriteString(text)
+			}
+		})
 		webResults = append(webResults, models.WebResult{
 			URL:     u,
-			Content: string(body),
+			Content: sb.String(),
 		})
 	}
 	return webResults, nil

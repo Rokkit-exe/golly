@@ -30,7 +30,7 @@ golly delete --model llama3.2`,
 			return
 		}
 
-		client := client.NewOllama(config.Host, config.Port)
+		client := client.NewOllama(config.OllamaHost, config.OllamaPort)
 
 		err = client.Delete(model)
 		if err != nil {

@@ -46,6 +46,15 @@ func (u *UI) PrintUser(query string) {
 	fmt.Print(rendered)
 }
 
+func (u *UI) PrintStatus(status string) {
+	message, err := u.Renderer.Render("## " + emoji.Sprint("⏳") + " " + status)
+	if err != nil {
+		fmt.Println("Error rendering status message: ", err)
+		return
+	}
+	fmt.Print(message)
+}
+
 func (u *UI) Scan() (string, bool) {
 	message, err := u.Renderer.Render("## Type your message (or 'exit' to quit): ")
 	if err != nil {

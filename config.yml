@@ -1,8 +1,12 @@
 # this is the default configuration file for the Ollama server
 
-host: "192.168.0.100"
-port: "10000"
-model: "llama3.2"
+ollama_host: "192.168.0.100"
+ollama_port: "10000"
+model: "mistral-nemo:latest"
+
+searxng_host: "192.168.0.100"
+searxng_port: "40000"
+
 
 system_prompts:
   refactor_query: |
@@ -51,16 +55,12 @@ system_prompts:
     ```
   answer_builder: |
     You are an intelligent assistant that answers user questions using a list of HTML documents. You are provided with:
+    📄 Query: 
+      The user’s question or request.
+    📑 Results:
+      - `url`: The URL of the document.
+      - `content`: The full HTML content of the document.
 
-    The user's question (natural language).
-
-    A list of objects in the form:
-    ```json
-    [
-      { "url": "<URL>", "content": "<HTML content>" },
-      ...
-    ]
-    ```
     📋 Your Tasks:
 
         Parse the HTML content of each object and extract the relevant readable text (ignore scripts, styles, navigation, etc.).

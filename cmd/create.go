@@ -36,7 +36,7 @@ var createCmd = &cobra.Command{
 			return
 		}
 
-		client := client.NewOllama(config.Host, config.Port)
+		client := client.NewOllama(config.OllamaHost, config.OllamaPort)
 
 		response, err := client.Create(name, from, system)
 		if err != nil {

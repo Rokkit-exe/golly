@@ -174,3 +174,39 @@ func (o *Ollama) Delete(model string) error {
 
 	return nil
 }
+
+func (o *Ollama) Generate(model string, prompt string, query string) string {
+	reqBody := models.GenerateRequest{
+		Model:  model,
+		Prompt: prompt,
+		Stream: false,
+	}
+
+	jsonData, err := json.Marshal(reqBody)
+	if err != nil {
+		fmt.Println("Error marshaling request body:", err)
+		return ""
+	}
+
+	req, err := http.NewRequest("POST", o.URL+"/api/generate", bytes.NewBuffer(jsonData))
+	if err != nil {
+		fmt.Println("Error creating request:", err)
+		return ""
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := o.HTTPClient.Do(req)
+	if err != nil {
+		fmt.Println("Error making request:", err)
+		return ""
+	}
+	defer resp.Body.Close()
+
+	var response models.GenerateResponse
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		fmt.Println("Error decoding response:", err)
+		return ""
+	}
+
+	return response.Response
+}
